@@ -9,7 +9,7 @@ pub struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, cx: Context, msg: Message) {
-        let prefix = env::var("PREFIX").unwrap();
+        let prefix = env::var("PREFIX").expect("No prefix found in .env.");
         let content = msg.content.to_string();
 
         if content.starts_with(&prefix) {

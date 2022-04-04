@@ -7,7 +7,7 @@ use {
 
 #[tokio::main]
 async fn main() -> Result {
-    let token = env::var("TOKEN").unwrap();
+    let token = env::var("TOKEN").expect("No token found in .env.");
     let mut client = Client::new(command_handler::Handler, token).await?;
 
     client.listen().await
