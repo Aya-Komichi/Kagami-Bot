@@ -19,10 +19,15 @@ impl EventHandler for Handler {
         let content = msg.content.to_string();
 
         if content.starts_with(&prefix[..]) {
-            let command = content[prefix.len()..content.len()].trim();
-            if command == "ping" {
-                msg.reply(&cx, "Hello! I'm here!", true).await.ok();
-            }
+            let command = content[prefix.len()..content.len()].trim().to_lowercase();
+            match command.as_str() {
+                "ping" => msg.reply(&cx, "Hello! I'm here!", true).await.ok(),
+                "shutdown" => {
+                    msg.reply(&cx, "Shutting down. See you later!", true).await.ok();
+                    std::process::exit(0)
+                },
+                _ => None,
+            };
         }
     }
 }
