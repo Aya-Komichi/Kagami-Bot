@@ -14,7 +14,9 @@ impl EventHandler for Handler {
 
         if content.starts_with(&prefix) {
             let command = content[prefix.len()..content.len() - 1].trim();
-            //msg.reply(&cx, "Pong!", true).await.ok();
+            if command == "ping" {
+                msg.reply(&cx, "Hello! I'm here!", true).await.ok();
+            }
         }
     }
 }
