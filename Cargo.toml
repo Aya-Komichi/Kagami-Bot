@@ -1,0 +1,12 @@
+[package]
+name = "kagami"
+version = "0.1.0"
+authors = ["小路綾#7541"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ruvolt = "0.5.0"
+async-trait = "*"
+tokio = { version = "*", features = ["macros", "rt-multi-thread"] }
