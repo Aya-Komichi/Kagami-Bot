@@ -1,3 +1,5 @@
+use crate::commands::core::{ping::ping, shutdown::shutdown};
+
 use {
     async_trait::async_trait,
     ruvolt::{models::Message, models::events::ReadyEvent, Context, EventHandler, error::Error},
@@ -21,11 +23,8 @@ impl EventHandler for Handler {
         if content.starts_with(&prefix[..]) {
             let command = content[prefix.len()..content.len()].trim().to_lowercase();
             let result = match command.as_str() {
-                "ping" => msg.reply(&cx, "Hello! I'm here!", true).await,
-                "shutdown" => {
-                    msg.reply(&cx, "Shutting down. See you later!", true).await.ok();
-                    std::process::exit(0)
-                },
+                "ping" => ping(&cx, msg).await,
+                "shutdown" => shutdown(&cx, msg).await,
                 _ => Ok(msg),
             };
             handle_error(result, content).await;
