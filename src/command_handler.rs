@@ -21,22 +21,32 @@ impl EventHandler for Handler {
         let content = msg.content.to_string();
 
         if content.starts_with(&prefix[..]) {
+            let msg_copy = msg.clone();
             let command = content[prefix.len()..content.len()].trim().to_lowercase();
-            let result = match command.as_str() {
+            let cmd_str = command.as_str();
+            let mut is_cmd = true;
+            let result = match cmd_str {
                 "ping" => ping(&cx, msg).await,
                 "shutdown" => shutdown(&cx, msg).await,
-                _ => Ok(msg),
+                _ => {
+                    is_cmd = false;
+                    Ok(msg)
+                },
             };
-            handle_error(result, content).await;
+            error_handler(cx, cmd_str, is_cmd, result, msg_copy).await;
         }
     }
 }
 
-async fn handle_error(result: Result<Message, Error>, msg_content: String) {
+async fn error_handler(context: Context, cmd_str: &str, is_cmd: bool, result: Result<Message, Error>, msg: Message) {
     if result.is_err() {
         let error: Error = result.err().unwrap();
-        println!("An error ocurred when executing a command.");
-        println!("Message content: {}", msg_content);
-        eprintln!("{}", error);
+        if is_cmd {
+            let author = context.cache.user(&msg.author_id).await.unwrap();
+            println!("An error ocurred when executing the `{}` command.", cmd_str);
+            println!("Message content: {}", msg.content);
+            println!("Author: {} `{}`", author.username, author.id);
+            eprintln!("```{}```", error);
+        }
     }
 }
