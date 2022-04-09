@@ -1,4 +1,5 @@
 use crate::commands::core::{ping::ping, shutdown::shutdown};
+use crate::commands::information::help::help;
 
 use {
     async_trait::async_trait,
@@ -26,6 +27,7 @@ impl EventHandler for Handler {
             let cmd_str = command.as_str();
             let mut is_cmd = true;
             let result = match cmd_str {
+                //"help" => help(&cx, msg, cmd_str).await,
                 "ping" => ping(&cx, msg).await,
                 "shutdown" => shutdown(&cx, msg).await,
                 _ => {
@@ -42,11 +44,20 @@ async fn error_handler(context: Context, cmd_str: &str, is_cmd: bool, result: Re
     if result.is_err() {
         let error: Error = result.err().unwrap();
         if is_cmd {
-            let author = context.cache.user(&msg.author_id).await.unwrap();
-            println!("An error ocurred when executing the `{}` command.", cmd_str);
-            println!("Message content: {}", msg.content);
-            println!("Author: {} `{}`", author.username, author.id);
-            eprintln!("```{}```", error);
+            let some_author = context.cache.user(&msg.author_id).await;
+            match some_author {
+                None => {
+                    println!("An error ocurred when executing the `{}` command.", cmd_str);
+                    println!("Message content: {}", msg.content);
+                    eprintln!("Error:\n{}", error);
+                },
+                Some(author) => {
+                    println!("An error ocurred when executing the `{}` command.", cmd_str);
+                    println!("Message content: {}", msg.content);
+                    println!("Author: {} `{}`", author.username, author.id);
+                    eprintln!("Error:\n{}", error);
+                },
+            };
         }
     }
 }
