@@ -27,7 +27,7 @@ impl EventHandler for Handler {
             let cmd_str = command.as_str();
             let mut is_cmd = true;
             let result = match cmd_str {
-                //"help" => help(&cx, msg, cmd_str).await,
+                "help" => help(&cx, msg, cmd_str).await,
                 "ping" => ping(&cx, msg).await,
                 "shutdown" => shutdown(&cx, msg).await,
                 _ => {
