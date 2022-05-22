@@ -5,8 +5,14 @@ use ruvolt::{
     Result,
     error::Error,
 };
+use {
+    dotenv::dotenv,
+    std::env
+};
 
-pub async fn help(cx: &Context, msg: Message, prefix: &str) -> Result<Message, Error> {
+pub async fn help(cx: &Context, msg: Message) -> Result<Message, Error> {
+    dotenv().ok();
+    let prefix = env::var("PREFIX").unwrap();
     let message = CreateMessage::new(" ").embed(|embed: CreateEmbed| -> CreateEmbed {
         embed.title("Command's List")
             .color("#d02bff")
