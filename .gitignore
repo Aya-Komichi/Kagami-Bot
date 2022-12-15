@@ -1,5 +1,6 @@
 /target
 .env
+Cargo.lock
 
 # Visual Studio cache directory
 .vs/
