@@ -10,4 +10,4 @@ edition = "2021"
 ruvolt = "0.*"
 async-trait = "*"
 tokio = { version = "*", features = ["macros", "rt-multi-thread"] }
-dotenv = "*"
+dotenv = "0.15.*"
