@@ -31,7 +31,7 @@ impl EventHandler for Handler {
         let some_author = ctx.cache.user(&msg.author_id).await;
 
         if let Some(author) = some_author {
-            if content.starts_with(&prefix[..]) && author.is_bot() {
+            if content.starts_with(&prefix[..]) && !author.is_bot() {
                 let msg_copy = msg.clone();
                 let command = content[prefix.len()..content.len()].trim().to_lowercase();
                 let cmd_str = command.as_str();
