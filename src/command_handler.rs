@@ -8,25 +8,14 @@ use {
     std::env
 };
 
+#[async_trait]
 pub trait CommandHandler {
     fn prefix(&self) -> String {
         env::var("PREFIX").unwrap()
     }
-}
 
-pub struct Handler;
-
-impl CommandHandler for Handler {}
-
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _ctx: Context, _data: ReadyEvent) {
-        dotenv().ok();
-        println!("I'm ready!");
-    }
-
-    async fn message(&self, ctx: Context, msg: Message) {
-        let prefix = &self.prefix();
+    async fn process(&self, ctx: Context, msg: Message) {
+        let prefix = self.prefix();
         let content = msg.content.to_string();
         let some_author = ctx.cache.user(&msg.author_id).await;
 
@@ -45,20 +34,36 @@ impl EventHandler for Handler {
                         Ok(msg)
                     },
                 };
-                error_handler(author, cmd_str, is_cmd, result, msg_copy).await;
+                self.error_handler(author, cmd_str, is_cmd, result, msg_copy).await;
+            }
+        }
+    }
+
+    async fn error_handler(author: User, cmd: &str, is_cmd: bool, result: Result<Message, Error>, msg: Message) {
+        if result.is_err() {
+            let error: Error = result.err().unwrap();
+            if is_cmd {
+                println!("An error ocurred when executing the `{}` command.", cmd);
+                println!("Message content: {}", msg.content);
+                println!("Author: {} `{}`", author.username, author.id);
+                eprintln!("Error:\n{}", error);
             }
         }
     }
 }
 
-async fn error_handler(author: User, cmd: &str, is_cmd: bool, result: Result<Message, Error>, msg: Message) {
-    if result.is_err() {
-        let error: Error = result.err().unwrap();
-        if is_cmd {
-            println!("An error ocurred when executing the `{}` command.", cmd);
-            println!("Message content: {}", msg.content);
-            println!("Author: {} `{}`", author.username, author.id);
-            eprintln!("Error:\n{}", error);
-        }
+pub struct Handler;
+
+impl CommandHandler for Handler {}
+
+#[async_trait]
+impl EventHandler for Handler {
+    async fn ready(&self, _ctx: Context, _data: ReadyEvent) {
+        dotenv().ok();
+        println!("I'm ready!");
+    }
+
+    async fn message(&self, ctx: Context, msg: Message) {
+        self.process(ctx, msg).await;
     }
 }
