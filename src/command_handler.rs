@@ -3,61 +3,62 @@ use crate::commands::information::help::help;
 
 use {
     async_trait::async_trait,
-    ruvolt::{models::Message, models::events::ReadyEvent, Context, EventHandler, error::Error},
+    ruvolt::{models::{Message, User}, models::events::ReadyEvent, Context, EventHandler, error::Error},
     dotenv::dotenv,
     std::env
 };
 
+pub trait CommandHandler {
+    fn prefix(&self) -> String {
+        env::var("PREFIX").unwrap()
+    }
+}
+
 pub struct Handler;
+
+impl CommandHandler for Handler {}
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn ready(&self, _cx: Context, _data: ReadyEvent) {
+    async fn ready(&self, _ctx: Context, _data: ReadyEvent) {
         dotenv().ok();
         println!("I'm ready!");
     }
 
-    async fn message(&self, cx: Context, msg: Message) {
-        let prefix = env::var("PREFIX").unwrap();
+    async fn message(&self, ctx: Context, msg: Message) {
+        let prefix = &self.prefix();
         let content = msg.content.to_string();
+        let some_author = ctx.cache.user(&msg.author_id).await;
 
-        if content.starts_with(&prefix[..]) {
-            let msg_copy = msg.clone();
-            let command = content[prefix.len()..content.len()].trim().to_lowercase();
-            let cmd_str = command.as_str();
-            let mut is_cmd = true;
-            let result = match cmd_str {
-                "help" => help(&cx, msg).await,
-                "ping" => ping(&cx, msg).await,
-                "shutdown" => shutdown(&cx, msg).await,
-                _ => {
-                    is_cmd = false;
-                    Ok(msg)
-                },
-            };
-            error_handler(cx, cmd_str, is_cmd, result, msg_copy).await;
+        if let Some(author) = some_author {
+            if content.starts_with(&prefix[..]) && !author.is_bot() {
+                let msg_copy = msg.clone();
+                let command = content[prefix.len()..content.len()].trim().to_lowercase();
+                let cmd_str = command.as_str();
+                let mut is_cmd = true;
+                let result = match cmd_str {
+                    "help" => help(&ctx, msg).await,
+                    "ping" => ping(&ctx, msg).await,
+                    "shutdown" => shutdown(&ctx, msg).await,
+                    _ => {
+                        is_cmd = false;
+                        Ok(msg)
+                    },
+                };
+                error_handler(author, cmd_str, is_cmd, result, msg_copy).await;
+            }
         }
     }
 }
 
-async fn error_handler(context: Context, cmd_str: &str, is_cmd: bool, result: Result<Message, Error>, msg: Message) {
+async fn error_handler(author: User, cmd: &str, is_cmd: bool, result: Result<Message, Error>, msg: Message) {
     if result.is_err() {
         let error: Error = result.err().unwrap();
         if is_cmd {
-            let some_author = context.cache.user(&msg.author_id).await;
-            match some_author {
-                None => {
-                    println!("An error ocurred when executing the `{}` command.", cmd_str);
-                    println!("Message content: {}", msg.content);
-                    eprintln!("Error:\n{}", error);
-                },
-                Some(author) => {
-                    println!("An error ocurred when executing the `{}` command.", cmd_str);
-                    println!("Message content: {}", msg.content);
-                    println!("Author: {} `{}`", author.username, author.id);
-                    eprintln!("Error:\n{}", error);
-                },
-            };
+            println!("An error ocurred when executing the `{}` command.", cmd);
+            println!("Message content: {}", msg.content);
+            println!("Author: {} `{}`", author.username, author.id);
+            eprintln!("Error:\n{}", error);
         }
     }
 }
