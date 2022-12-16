@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use crate::commands::core::{ping::ping, shutdown::shutdown};
 use crate::commands::information::help::help;
+use crate::commands::command::Command;
 
 use {
     async_trait::async_trait,
@@ -13,6 +16,8 @@ pub trait CommandHandler {
     fn prefix(&self) -> String {
         env::var("PREFIX").unwrap()
     }
+
+    fn load_commands(&self, _cmds: Vec<&dyn Command>) {}
 
     async fn process(&self, ctx: Context, msg: Message) {
         let prefix = self.prefix();
@@ -52,12 +57,18 @@ pub trait CommandHandler {
     }
 }
 
-pub struct Handler;
+pub struct Handler<'a> {
+    commands: HashMap<&'a str, &'a dyn Command>
+}
 
-impl CommandHandler for Handler {}
+impl CommandHandler for Handler<'_> {
+    fn load_commands(&self,_cmds:Vec<&dyn Command>) {
+        
+    }
+}
 
 #[async_trait]
-impl EventHandler for Handler {
+impl EventHandler for Handler<'_> {
     async fn ready(&self, _ctx: Context, _data: ReadyEvent) {
         dotenv().ok();
         println!("I'm ready!");
