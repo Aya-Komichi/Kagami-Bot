@@ -34,7 +34,7 @@ pub trait CommandHandler {
                         Ok(msg)
                     },
                 };
-                self.error_handler(author, cmd_str, is_cmd, result, msg_copy).await;
+                Self::error_handler(author, cmd_str, is_cmd, result, msg_copy).await;
             }
         }
     }
