@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use crate::commands::core::{ping::ping, shutdown::shutdown};
 use crate::commands::information::help::help;
@@ -58,7 +59,7 @@ pub trait CommandHandler {
 }
 
 pub struct Handler<'a> {
-    commands: HashMap<&'a str, &'a dyn Command>
+    commands: Arc<Mutex<HashMap<&'a str, &'a dyn Command>>>
 }
 
 impl CommandHandler for Handler<'_> {
